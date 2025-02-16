@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Sustainsys.Saml2.Metadata;
+using Sustainsys.Saml2;
 
 namespace SAML_SP_Test_App
 {
@@ -37,6 +39,24 @@ namespace SAML_SP_Test_App
                 sharedOptions.DefaultChallengeScheme = Sustainsys.Saml2.AspNetCore2.Saml2Defaults.Scheme;
             }).AddSaml2(options =>
             {
+                options.SPOptions.EntityId = new Sustainsys.Saml2.Metadata.EntityId("https://localhost:5001/Saml2");
+
+                // Use PublicOrigin to set the base URL for your application
+                // Configure the AssertionConsumerService URL in the metadata
+                options.SPOptions.PublicOrigin = new Uri("https://localhost:44383");
+
+                // Also set the return URL
+                options.SPOptions.ReturnUrl = new Uri("https://localhost:44383/Saml2/Acs");
+
+                var idp = new IdentityProvider(
+                    new EntityId("https://hcliamtrainingb2c.onmicrosoft.com/B2C_1A_RAJA_SAML2_SIGNUP_SIGNIN"),
+                    options.SPOptions)
+                {
+                    MetadataLocation = "https://hcliamtrainingb2c.b2clogin.com/hcliamtrainingb2c.onmicrosoft.com/B2C_1A_RAJA_SAML2_SIGNUP_SIGNIN/samlp/metadata"
+                };
+
+                options.IdentityProviders.Add(idp);
+
                 options.SPOptions = new Sustainsys.Saml2.Configuration.SPOptions()
                 {
                     AuthenticateRequestSigningBehavior = Sustainsys.Saml2.Configuration.SigningBehavior.Never,
