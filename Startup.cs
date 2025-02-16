@@ -39,29 +39,13 @@ namespace SAML_SP_Test_App
                 sharedOptions.DefaultChallengeScheme = Sustainsys.Saml2.AspNetCore2.Saml2Defaults.Scheme;
             }).AddSaml2(options =>
             {
-                options.SPOptions.EntityId = new Sustainsys.Saml2.Metadata.EntityId("https://localhost:5001/Saml2");
-
-                // Use PublicOrigin to set the base URL for your application
-                // Configure the AssertionConsumerService URL in the metadata
-                options.SPOptions.PublicOrigin = new Uri("https://localhost:44383");
-
-                // Also set the return URL
-                options.SPOptions.ReturnUrl = new Uri("https://localhost:44383/Saml2/Acs");
-
-                var idp = new IdentityProvider(
-                    new EntityId("https://hcliamtrainingb2c.onmicrosoft.com/B2C_1A_RAJA_SAML2_SIGNUP_SIGNIN"),
-                    options.SPOptions)
-                {
-                    MetadataLocation = "https://hcliamtrainingb2c.b2clogin.com/hcliamtrainingb2c.onmicrosoft.com/B2C_1A_RAJA_SAML2_SIGNUP_SIGNIN/samlp/metadata"
-                };
-
-                options.IdentityProviders.Add(idp);
-
                 options.SPOptions = new Sustainsys.Saml2.Configuration.SPOptions()
                 {
                     AuthenticateRequestSigningBehavior = Sustainsys.Saml2.Configuration.SigningBehavior.Never,
                     EntityId = new Sustainsys.Saml2.Metadata.EntityId(Configuration.GetValue<string>("Saml2:EntityId")),
-                    MinIncomingSigningAlgorithm = Configuration.GetValue<string>("Saml2:MinIncomingSigningAlgorithm")
+                    MinIncomingSigningAlgorithm = Configuration.GetValue<string>("Saml2:MinIncomingSigningAlgorithm"),
+                    PublicOrigin = new Uri("https://localhost:44383"),
+                    ReturnUrl = new Uri("https://localhost:44383/Saml2/Acs")
                 };
 
                 // We need to use a cert for Sustainsys.Saml2 to work with logout, so we borrow their sample cert
@@ -74,13 +58,14 @@ namespace SAML_SP_Test_App
                 options.SPOptions.ServiceCertificates.Add(new System.Security.Cryptography.X509Certificates.X509Certificate2(certFile, certPassword));
 
                 // The Azure AD B2C Identity Provider we use
-                options.IdentityProviders.Add(
-                  new Sustainsys.Saml2.IdentityProvider(
+                var idp = new Sustainsys.Saml2.IdentityProvider(
                     new Sustainsys.Saml2.Metadata.EntityId(Configuration.GetValue<string>("Saml2:IdpEntityId")), options.SPOptions)
-                  {
-                      MetadataLocation = Configuration.GetValue<string>("Saml2:IdpMetadata"),
-                      LoadMetadata = true
-                  });
+                {
+                    MetadataLocation = Configuration.GetValue<string>("Saml2:IdpMetadata"),
+                    LoadMetadata = true
+                };
+
+                options.IdentityProviders.Add(idp);
             }).AddCookie();
 
             services.AddControllersWithViews(options =>
