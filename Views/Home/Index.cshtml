@@ -1,0 +1,19 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
+        @await Html.PartialAsync("_LoginPartial")
+        @if (User.Identity.IsAuthenticated)
+        {
+            <p>User is authenticated</p>
+        }
+        else
+        {
+            <p>User is not authenticated</p>
+        }
+    </div>
+</div>
