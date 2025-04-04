@@ -56,3 +56,9 @@ After generating the certificate, update the `appsettings.json` file with the co
 - Store the certificate password securely, preferably using a secret manager or key vault.
 - Ensure that the certificate has the appropriate key usage extensions for SAML signing and encryption.
 - Regularly rotate certificates according to your organization's security policies.
+
+## How to Use This Application
+1) Configure your Identity Provider with the Service Provider information shown above.
+2) Click the "Login with SAML" button to initiate SAML authentication.
+3) After successful authentication, you will be redirected back to this application.
+4) Click the "View Claims" button to see the claims received from the Identity Provider.
