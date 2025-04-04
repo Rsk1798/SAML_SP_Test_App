@@ -1,0 +1,70 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+
+@model List<ClaimViewModel>
+@{
+    ViewData["Title"] = "SAML Claims";
+}
+
+<h1>SAML Claims</h1>
+<p class="lead">The following claims were received from the Identity Provider:</p>
+
+@if (Model != null && Model.Any())
+{
+    <div class="card mt-4">
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Claim Type</th>
+                        <th>Claim Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var claim in Model)
+                    {
+                        <tr>
+                            <td>@claim.Type</td>
+                            <td>@claim.Value</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-warning">
+        No claims were received from the Identity Provider.
+    </div>
+}
+
+<div class="mt-4">
+    <a asp-controller="Home" asp-action="Index" class="btn btn-primary">Return to Home</a>
+    <a asp-controller="Auth" asp-action="Logout" class="btn btn-warning">Logout</a>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h5>Common SAML Claims</h5>
+    </div>
+    <div class="card-body">
+        <p>Here are some common SAML claims and their meanings:</p>
+        <ul>
+            <li><strong>NameID:</strong> The unique identifier for the user.</li>
+            <li><strong>http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier:</strong> The user's identifier.</li>
+            <li><strong>http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name:</strong> The user's name.</li>
+            <li><strong>http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress:</strong> The user's email address.</li>
+            <li><strong>http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname:</strong> The user's first name.</li>
+            <li><strong>http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname:</strong> The user's last name.</li>
+            <li><strong>http://schemas.microsoft.com/identity/claims/tenantid:</strong> The tenant ID (for Azure AD).</li>
+            <li><strong>http://schemas.microsoft.com/identity/claims/objectidentifier:</strong> The object ID (for Azure AD).</li>
+            <li><strong>http://schemas.microsoft.com/identity/claims/identityprovider:</strong> The identity provider that authenticated the user.</li>
+        </ul>
+    </div>
+</div>

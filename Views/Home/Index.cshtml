@@ -1,0 +1,81 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+@* <div class="text-center"> *@
+@*     <h1 class="display-4">Welcome</h1> *@
+@*     <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p> *@
+@* </div> *@
+
+
+<div class="text-center">
+    <h1 class="display-4">SAML Test Application</h1>
+    <p class="lead">A simple application for testing SAML 2.0 integration with Identity Providers.</p>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Service Provider Information</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Entity ID:</strong> @ViewBag.ServiceProviderEntityId</p>
+                <p><strong>Assertion Consumer Service URL:</strong>@ViewBag.ServiceProviderRootUrl</p>
+                <p>[Your SP URL]/Auth/AssertionConsumerService</p>
+                <p><strong>Single Logout Service URL:</strong>@ViewBag.ServiceProviderRootUrl</p>
+                <p>[Your SP URL]/Auth/LoggedOut</p>
+                <p>
+                    <a asp-controller="Auth" asp-action="Metadata" class="btn btn-primary">View Metadata</a>
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Identity Provider Information</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Entity ID:</strong> @ViewBag.IdpEntityId</p>
+                <p>
+                    Configure your Identity Provider with the Service Provider information shown on the left.
+                </p>
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <div class="alert alert-success">
+                        <p>You are currently authenticated.</p>
+                        <p>
+                            <a asp-controller="Auth" asp-action="Claims" class="btn btn-info">View Claims</a>
+                            <a asp-controller="Auth" asp-action="Logout" class="btn btn-warning">Logout</a>
+                        </p>
+                    </div>
+                }
+                else
+                {
+                    <p>
+                        <a asp-controller="Auth" asp-action="Login" class="btn btn-success">Login with SAML</a>
+                    </p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>How to Use This Application</h5>
+            </div>
+            <div class="card-body">
+                <ol>
+                    <li>Configure your Identity Provider with the Service Provider information shown above.</li>
+                    <li>Click the "Login with SAML" button to initiate SAML authentication.</li>
+                    <li>After successful authentication, you will be redirected back to this application.</li>
+                    <li>Click the "View Claims" button to see the claims received from the Identity Provider.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
