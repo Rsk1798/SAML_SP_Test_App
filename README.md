@@ -1,4 +1,4 @@
-## How to Use This Application
+# How to Use This Application
 1) Configure your Identity Provider with the Service Provider information shown above.
 2) Click the "Login with SAML" button to initiate SAML authentication.
 3) After successful authentication, you will be redirected back to this application.
