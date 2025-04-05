@@ -62,5 +62,14 @@
         /// </summary>
         public List<string> AuthnContexts { get; set; } = new List<string>();
 
+
+
+
+        // Additional properties for different policies
+        // Policy-specific URLs
+        public string SignUpSignInPolicyUrl { get; set; } = string.Empty;
+        public string ProfileEditSsoUrl {  get; set; } = string.Empty;
+        public string PasswordResetSsoUrl { get; set;} = string.Empty;
+
     }
 }
