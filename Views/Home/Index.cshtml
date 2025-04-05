@@ -48,6 +48,8 @@
                         <p>
                             <a asp-controller="Auth" asp-action="Claims" class="btn btn-info">View Claims</a>
                             <a asp-controller="Auth" asp-action="Logout" class="btn btn-warning">Logout</a>
+                            <a asp-controller="Auth" asp-action="ProfileEdit" class="btn btn-success">ProfileEdit</a>
+                            <a asp-controller="Auth" asp-action="PasswordReset" class="btn btn-primary">PasswordReset</a>
                         </p>
                     </div>
                 }
@@ -55,6 +57,8 @@
                 {
                     <p>
                         <a asp-controller="Auth" asp-action="Login" class="btn btn-success">Login with SAML</a>
+                        <a asp-controller="Auth" asp-action="SignUp" class="btn btn-primary">SignUp with SAML</a>
+                        
                     </p>
                 }
             </div>

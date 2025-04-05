@@ -64,6 +64,20 @@ namespace SAML_SP_Test_App.Controllers
             var relayStateQuery = binding.GetRelayStateQuery();
             var returnUrl = relayStateQuery.ContainsKey("returnUrl") ? relayStateQuery["returnUrl"] : Url.Action("Index", "Home");
 
+
+
+
+            // Optionally, you can check the relay state or other attributes to determine the next action
+            // Handle different policies based on the relay state or other attributes
+            // You can detect which policy was used by examining the Issuer or other attributes
+            // var issuer = saml2AuthnResponse.Issuer;
+            // if (issuer.Contains("profile_edit"))
+            // {
+            //     // Handle profile edit response
+            //     return RedirectToAction("ProfileUpdated", "Home");
+            // }
+
+
             return Redirect(returnUrl);
         }
 
@@ -95,6 +109,69 @@ namespace SAML_SP_Test_App.Controllers
 
             return Redirect(Url.Action("Index", "Home"));
         }
+
+
+
+        //[HttpGet]
+        //public IActionResult LoginWithAzureAD()
+        //{
+
+        //    // Use Azure AD configuration
+        //    return InitiateSamlRequest("AzureAD");
+
+        //}
+
+
+
+        //[HttpGet]
+        //public IActionResult LoginWithOkta()
+        //{
+
+        //    // Use Okta configuration
+        //    return InitiateSamlRequest("Okta");
+
+        //}
+
+
+
+
+        //private IActionResult InitiateSamlRequest(string idpProvider)
+        //{
+        //    var samlConfig = _configuration.GetSection("SAML").Get<SamlConfig>();
+        //    var binding = new Saml2RedirectBinding();
+        //    binding.SetRelayStateQuery(new Dictionary<string, string>
+        //    {
+        //        {"returnUrl", Url.Action("Index", "Home") },
+        //        {"idpProvider", idpProvider } // Pass the provider as a query parameter
+        //    });
+
+        //    // Select the appropriate configuration based on the provider
+        //    var policyUrl = idpProvider switch
+        //    {
+        //        "AzureAD" => samlConfig.SignUpSignInPolicyUrl, // Use the sign-up/sign-in policy URL for Azure AD
+        //        // AzureADSignInPolicyUrl,
+
+        //        // "Okta" => samlConfig.OktaSignInPolicyUrl, // Use the sign-in policy URL for Okta
+        //        //"Okta" => samlConfig.OktaSignInPolicyUrl,
+        //        //_ => throw new ArgumentException("Invalid provider")
+        //    };
+
+        //    var policyConfig = CreatePolicySpecificConfiguration(policyUrl);
+
+        //    // Create a new Saml2AuthnRequest with the selected policy URL
+        //    // return binding.Bind(new Saml2AuthnRequest(CreatePolicySpecificConfiguration(policyUrl))
+        //    return binding.Bind(new Saml2AuthnRequest(policyConfig)
+        //    {
+        //        ForceAuthn = false, // Set to true if you want to force authentication
+        //        // true,
+        //        NameIdPolicy = new NameIdPolicy
+        //        {
+        //            AllowCreate = true,
+        //            Format = "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent"
+        //            // "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent"
+        //        }
+        //    }).ToActionResult();
+        //}
 
 
 
@@ -193,8 +270,183 @@ namespace SAML_SP_Test_App.Controllers
             // Add custom claims if needed
             // claims.Add(new Claim("CustomClaim", "CustomValue"));
 
+
+            // Check for policy-specific claims
+            // Example: Check if the user is authenticated with a specific policy
+            var issuerClaim = claimsPrincipal.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier");
+            if (issuerClaim != null)
+            {
+                // Add a custom claim based on the issuer
+                // You can add policy-specific logic here
+                // For example, add a claim indicating which policy was used
+
+                var issuer = claimsPrincipal.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/issuer")?.Value??"";
+                // claims.Add(new Claim("Policy", "SignUpSignIn"));
+                //claims.Add(new Claim("Issuer", issuerClaim.Value));
+
+                if (issuer.Contains("profile_edit"))
+                {
+                    claims.Add(new Claim("PolicyUsed", "ProfileEdit"));
+                }
+                else if (issuer.Contains("password_reset"))
+                {
+                    claims.Add(new Claim("PolicyUsed", "PasswordReset"));
+                }
+                else if (issuer.Contains("signup_signin"))
+                {
+                    claims.Add(new Claim("PolicyUsed", "SignUpSignIn"));
+                }
+                else 
+                {
+                    claims.Add(new Claim("PolicyUsed", "SignUpSignIn"));
+                }
+            }
+
             return new ClaimsPrincipal(new ClaimsIdentity(claims, claimsPrincipal.Identity.AuthenticationType));
         }
+
+
+        private Saml2Configuration CreatePolicySpecificConfiguration(string policyUrl)
+        {
+            // Create a new configuration based on the existing one
+            var policyConfig = new Saml2Configuration
+            {
+                Issuer = _saml2Configuration.Issuer,
+                SigningCertificate = _saml2Configuration.SigningCertificate,
+                DecryptionCertificate = _saml2Configuration.DecryptionCertificate,
+                SignatureAlgorithm = _saml2Configuration.SignatureAlgorithm,
+                // AllowedAudienceUris = _saml2Configuration.AllowedAudienceUris
+            };
+
+            // Add allowed audience URIs
+            foreach (var uri in _saml2Configuration.AllowedAudienceUris)
+            {
+                policyConfig.AllowedAudienceUris.Add(uri);
+            }
+
+
+            // Set the policy-specific URL
+            policyConfig.SingleSignOnDestination = new Uri(policyUrl);
+            return policyConfig;
+        }
+
+
+        [HttpGet]
+        public IActionResult SignUp()
+        {
+            var samlConfig = _configuration.GetSection("SAML").Get<SamlConfig>();
+            var binding = new Saml2RedirectBinding();
+            binding.SetRelayStateQuery(new Dictionary<string, string>
+            {
+                {"returnUrl", Url.Action("Index", "Home") }
+            });
+
+
+            // Use the sign-up/sign-in policy URL
+            var policyConfig = CreatePolicySpecificConfiguration(samlConfig.SignUpSignInPolicyUrl);
+            return binding.Bind(new Saml2AuthnRequest(policyConfig)
+            {
+                // Use the sign-up/sign-in policy URL
+                //SingleSignOnDestination = new Uri("https://your-b2c-tenant.b2clogin.com/your-b2c-tenant.onmicrosoft.com/B2C_1A_SAML_sign_up_sign_in/samlp/sso/login"),
+                //SigningCertificate = _saml2Configuration.SigningCertificate,
+                // Other properties from _saml2Configuration
+
+                ForceAuthn = true,  // Force authentication to ensure the sign-up experience
+                //samlConfig?.ForceAuthn ?? false,
+                
+                NameIdPolicy = new NameIdPolicy
+                {
+                    AllowCreate = true,  // Allow creating new accounts
+                    Format = "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent"
+                }
+            }).ToActionResult();
+        }
+
+
+        [HttpGet]
+        public IActionResult ProfileEdit()
+        {
+
+            var samlConfig = _configuration.GetSection("SAML").Get<SamlConfig>();
+
+
+            // Ensure the user is authenticated before profile editing
+            if (!User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction("Login");
+            }
+
+
+            var binding = new Saml2RedirectBinding();
+            binding.SetRelayStateQuery(new Dictionary<string, string>
+            {
+                {"returnUrl", Url.Action("Index", "Home") }
+            });
+
+
+            // Override the default endpoints with profile edit policy endpoints
+            // Use the profile edit policy URL
+
+            var profileEditConfig = CreatePolicySpecificConfiguration(samlConfig.ProfileEditSsoUrl);
+
+
+            //var profileEditConfig = new Saml2Configuration
+            //{
+            //    Issuer = _saml2Configuration.Issuer,
+            //    SingleSignOnDestination = new Uri("https://your-b2c-tenant.b2clogin.com/your-b2c-tenant.onmicrosoft.com/B2C_1A_SAML_profile_edit/samlp/sso/login"),
+            //    SigningCertificate = _saml2Configuration.SigningCertificate,
+
+            //    // Other properties from _saml2Configuration
+            //};
+
+            return binding.Bind(new Saml2AuthnRequest(profileEditConfig)
+            {
+                ForceAuthn = true, // Force authentication for profile edit
+                NameIdPolicy = new NameIdPolicy
+                {
+                    AllowCreate = false,  // Do not allow creating new accounts during profile edit
+                    //true,
+                    Format = "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent"
+                    // "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent"
+                }
+            }).ToActionResult();
+
+        }
+
+        // Similar methods for PasswordReset and other policies
+        [HttpGet]
+        public IActionResult PasswordReset()
+        {
+
+            var samlConfig = _configuration.GetSection("SAML").Get<SamlConfig>();
+            // Ensure the user is authenticated before password reset
+            if (!User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction("Login");
+            }
+            var binding = new Saml2RedirectBinding();
+            binding.SetRelayStateQuery(new Dictionary<string, string>
+            {
+                {"returnUrl", Url.Action("Index", "Home") }
+            });
+
+            // Override the default endpoints with password reset policy endpoints
+            // Use the password reset policy URL
+            var passwordResetConfig = CreatePolicySpecificConfiguration(samlConfig.PasswordResetSsoUrl);
+            return binding.Bind(new Saml2AuthnRequest(passwordResetConfig)
+            {
+                ForceAuthn = true, // Force authentication for password reset
+                NameIdPolicy = new NameIdPolicy
+                {
+                    AllowCreate = false,  // Do not allow creating new accounts during password reset
+                    //true,
+                    Format = "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent"
+                    // "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent"
+                }
+            }).ToActionResult();
+
+        }
+
 
 
         //public IActionResult Index()
